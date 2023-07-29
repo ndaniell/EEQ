@@ -66,7 +66,7 @@ void test_event_queue_full() {
     }
     assert(EventQueuePut(&eq, &event) == false);
     EventQueueClear(&eq);
-    //assert(EventQueuePut(&eq, &event) == true);
+    assert(EventQueuePut(&eq, &event) == true);
 }
 
 
