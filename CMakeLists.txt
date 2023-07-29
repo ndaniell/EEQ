@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.16)
 
-project(EEQ)
+project(main)
 
-add_executable(tests tests.c)
+add_executable(main tests.c)
+
+install(TARGETS main)
+
+enable_testing()
+add_test(NAME main COMMAND main)
