@@ -25,7 +25,9 @@
 
 #define BUFFER_SIZE (uint32_t)1024
 
-
+ /**
+  * Happy path example
+ */
 void test_happy_trails() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
@@ -47,6 +49,9 @@ void test_happy_trails() {
     assert(EventQueueGet(&eq) == NULL);
 }
 
+/**
+ * Verify Empty Full Behavior
+*/
 void test_event_queue_full() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
@@ -62,6 +67,10 @@ void test_event_queue_full() {
     assert(EventQueuePut(&eq, &event) == false);
 }
 
+
+/**
+ * Verify Empty Queue Behavior
+*/
 void test_event_queue_empty() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
