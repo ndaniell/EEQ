@@ -24,12 +24,12 @@
 #include "event_queue.h"
 
 #define BUFFER_SIZE (uint32_t)64
+static uint8_t buffer[BUFFER_SIZE];
 
- /**
-  * Happy path example
- */
+/**
+ * Happy path example
+*/
 void test_happy_trails() {
-    static uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     EventQueueInit(&eq, buffer, BUFFER_SIZE);
 
@@ -53,7 +53,6 @@ void test_happy_trails() {
  * Verify Empty Full Behavior
 */
 void test_event_queue_full() {
-    static uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     EventQueueInit(&eq, buffer, BUFFER_SIZE);
 
@@ -74,7 +73,6 @@ void test_event_queue_full() {
  * Verify Empty Queue Behavior
 */
 void test_event_queue_empty() {
-    static uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     EventQueueInit(&eq, buffer, BUFFER_SIZE);
 
