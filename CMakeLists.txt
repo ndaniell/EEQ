@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.12) # version can be different
+cmake_minimum_required(VERSION 3.12)
 
-project(EQQ) #name of your project
+project(EEQ)
 
-add_executable(EQQ tests.c) # add this executable
+add_executable(tests tests.c)
