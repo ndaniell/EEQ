@@ -81,7 +81,9 @@ void test_event_queue_empty() {
     assert(EventQueueGet(&eq) == NULL);
 }
 
-
+/**
+ * Main
+*/
 int main(int argc, char* argv[]) {
     test_happy_trails();
     test_event_queue_full();
