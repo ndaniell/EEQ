@@ -23,7 +23,7 @@
 #include <string.h>
 #include "event_queue.h"
 
-#define BUFFER_SIZE (uint32_t)1024
+#define BUFFER_SIZE (uint32_t)64
 
  /**
   * Happy path example
