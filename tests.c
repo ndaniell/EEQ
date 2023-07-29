@@ -29,7 +29,7 @@
   * Happy path example
  */
 void test_happy_trails() {
-    uint8_t buffer[BUFFER_SIZE];
+    static uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     EventQueueInit(&eq, buffer, BUFFER_SIZE);
 
@@ -53,7 +53,7 @@ void test_happy_trails() {
  * Verify Empty Full Behavior
 */
 void test_event_queue_full() {
-    uint8_t buffer[BUFFER_SIZE];
+    static uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     EventQueueInit(&eq, buffer, BUFFER_SIZE);
 
@@ -65,7 +65,7 @@ void test_event_queue_full() {
         assert(EventQueuePut(&eq, &event) == true);
     }
     assert(EventQueuePut(&eq, &event) == false);
-    //EventQueueClear(&eq);
+    EventQueueClear(&eq);
     //assert(EventQueuePut(&eq, &event) == true);
 }
 
@@ -74,7 +74,7 @@ void test_event_queue_full() {
  * Verify Empty Queue Behavior
 */
 void test_event_queue_empty() {
-    uint8_t buffer[BUFFER_SIZE];
+    static uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     EventQueueInit(&eq, buffer, BUFFER_SIZE);
 
