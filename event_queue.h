@@ -50,6 +50,8 @@ extern "C"
      * Initialize the event queue
      *
      * @param eq Event Queue
+     * @param buffer Memory block to utilize
+     * @param buffer_size Size of memory block
     */
     static inline bool EventQueueInit(event_queue_t* eq, void* buffer, uint32_t buffer_size)
     {

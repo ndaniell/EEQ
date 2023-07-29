@@ -34,7 +34,7 @@ void test_happy_trails() {
     EventQueueInit(&eq, buffer, BUFFER_SIZE);
 
     char* event_data = "Hello World";
-    event_t event = { .event_id = 1, event.event_data_length = strlen(event_data) + 1, .event_data = event_data };
+    event_t event = { .event_id = 1, .event_data_length = strlen(event_data) + 1, .event_data = event_data };
     assert(EventQueuePut(&eq, &event) == true);
 
     event_t* out_event = EventQueueGet(&eq);
@@ -65,6 +65,8 @@ void test_event_queue_full() {
         assert(EventQueuePut(&eq, &event) == true);
     }
     assert(EventQueuePut(&eq, &event) == false);
+    EventQueueClear(&eq);
+    assert(EventQueuePut(&eq, &event) == true);
 }
 
 

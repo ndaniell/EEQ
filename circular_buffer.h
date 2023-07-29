@@ -149,10 +149,10 @@ extern "C"
      */
     static inline void CircularBufferClear(circular_buffer_t* cbuffer)
     {
-        uint32_t fillCount;
-        if (CircularBufferTail(cbuffer, &fillCount))
+        uint32_t fill_count;
+        if (CircularBufferTail(cbuffer, &fill_count))
         {
-            CircularBufferConsume(cbuffer, fillCount);
+            CircularBufferConsume(cbuffer, fill_count);
         }
     }
 
