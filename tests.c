@@ -186,34 +186,38 @@ void test_event_queue_fuzz_event_data_length() {
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     EventQueueInit(&eq, &eq_config);
 
-    const uint32_t test_cycles = 100000;
+    const uint32_t test_cycles = 1000;
     uint32_t put_count = 0;
     uint32_t get_count = 0;
+    const uint32_t max_high_water = BUFFER_SIZE - (BUFFER_SIZE % (sizeof(event_t) + 1));  // +1 for marker
     for (uint32_t i = 0; i < test_cycles; i++) {
+        EventQueueInit(&eq, &eq_config);
+        // Run event size combinations until the high water fill mark hit max
+        while (eq._cb.high_water_fill_count <= max_high_water) {
+            // Fill the queue with random sized events with random data
+            bool placed = false;
+            do {
+                uint32_t event_data_size = rand() % (BUFFER_SIZE / 4);
+                for (uint32_t i = 0; i < event_data_size; i++) {
+                    rand_buffer[i] = (uint8_t)rand();
+                }
+                placed = EventQueuePut(&eq, put_count, rand_buffer, event_data_size);
+                if (placed) {
+                    put_count++;
+                }
+            } while (placed);
 
-        // Fill the queue
-        bool placed = false;
-        do {
-            uint32_t event_data_size = rand() % (BUFFER_SIZE / 4);
-            for (uint32_t i = 0; i < event_data_size; i++) {
-                rand_buffer[i] = (uint8_t)rand();
-            }
-            placed = EventQueuePut(&eq, put_count, rand_buffer, event_data_size);
-            if (placed) {
-                put_count++;
-            }
-        } while (placed);
-
-        // Empty the queue
-        event_t* out_event = NULL;
-        do {
-            out_event = EventQueueGet(&eq);
-            if (out_event) {
-                assert(out_event->event_id == get_count);
-                get_count++;
-                EventQueuePop(&eq);
-            }
-        } while (out_event);
+            // Empty the queue
+            event_t* out_event = NULL;
+            do {
+                out_event = EventQueueGet(&eq);
+                if (out_event) {
+                    assert(out_event->event_id == get_count);
+                    get_count++;
+                    EventQueuePop(&eq);
+                }
+            } while (out_event);
+        }
     }
 }
 
