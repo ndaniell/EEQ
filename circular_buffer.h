@@ -52,6 +52,7 @@ extern "C"
         uint32_t head;                     // head index
         volatile atomic_int_t fill_count;  // number of used indexes
         bool atomic;                       // Enable or disable atomic operators
+        uint32_t high_water_fill_count;    // Largest value the fill count has reached
     } circular_buffer_t;
 
     static inline void* CircularBufferTail(circular_buffer_t* cb, uint32_t* available_bytes);
@@ -71,6 +72,7 @@ extern "C"
         cb->fill_count = 0;
         cb->head = cb->tail = 0;
         cb->atomic = use_atomics;
+        cb->high_water_fill_count = 0;
         return true;
     }
 
@@ -114,15 +116,16 @@ extern "C"
     static inline void CircularBufferConsume(circular_buffer_t* const cb, const uint32_t amount)
     {
         cb->tail = (cb->tail + amount) % cb->length;
-        if (cb->atomic)
-        {
+        if (cb->atomic) {
             atomicFetchAdd(&cb->fill_count, -(int)amount);
         }
-        else
-        {
+        else {
             cb->fill_count -= amount;
         }
         assert(cb->fill_count >= 0);
+        if (cb->fill_count > cb->high_water_fill_count) {
+            cb->high_water_fill_count = cb->fill_count;
+        }
     }
 
     /**
@@ -219,7 +222,7 @@ extern "C"
     }
 
 #ifdef __cplusplus
-}
+    }
 #endif  // __cplusplus
 
 #endif  // CIRCULAR_BUFFER_H
