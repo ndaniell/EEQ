@@ -18,9 +18,10 @@ EventQueueInit(&eq, &eq_config);
 
 ## Put
 ```c
+uint32_t event_id = 1;
 char* event_data = "Hello World";
 const uint32_t event_data_len = strlen(event_data) + 1;  // Plus 1 for NULL
-bool enqueued = EventQueuePut(&eq, 1, event_data, event_data_len);
+bool enqueued = EventQueuePut(&eq, event_id, event_data, event_data_len);
 if (!enqueued) {
     // Queue full
 }
