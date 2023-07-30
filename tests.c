@@ -27,6 +27,16 @@
 
 #define BUFFER_SIZE (uint32_t)512
 
+static event_queue_config_t default_config(void* buffer, uint32_t buffer_size) {
+    event_queue_config_t eq_config = { .buffer = buffer,
+                                       .buffer_len = buffer_size,
+                                       .alignment = 4,
+                                       .use_atomics = false,
+                                       .lock = NULL,
+                                       .unlock = NULL };
+    return eq_config;
+}
+
 static void round_trip_test(event_queue_t* eq) {
     uint32_t event_id = 1;
     char* event_data = "Hello World";
@@ -50,7 +60,7 @@ static void round_trip_test(event_queue_t* eq) {
 void test_happy_trails() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
-    event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 4, .use_atomics = true };
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     EventQueueInit(&eq, &eq_config);
 
     round_trip_test(&eq);
@@ -62,7 +72,8 @@ void test_happy_trails() {
 void test_zero_alignment() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
-    event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 0, .use_atomics = true };
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
+    eq_config.alignment = 0;
     EventQueueInit(&eq, &eq_config);
 
     round_trip_test(&eq);
@@ -74,7 +85,8 @@ void test_zero_alignment() {
 void test_no_atomics() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
-    event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 4, .use_atomics = false };
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
+    eq_config.use_atomics = false;
     EventQueueInit(&eq, &eq_config);
 
     round_trip_test(&eq);
@@ -86,7 +98,7 @@ void test_no_atomics() {
 void test_event_queue_full() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
-    event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 4, .use_atomics = true };
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     EventQueueInit(&eq, &eq_config);
 
     char* event_data = "Hello World";
@@ -118,7 +130,7 @@ void test_event_queue_full() {
 void test_event_queue_empty() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
-    event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 4, .use_atomics = true };
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     EventQueueInit(&eq, &eq_config);
 
     assert(EventQueueGet(&eq) == NULL);
@@ -130,7 +142,7 @@ void test_event_queue_empty() {
 void test_event_queue_fill_and_empty() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
-    event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 4, .use_atomics = true };
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     EventQueueInit(&eq, &eq_config);
 
     // Size of event, plus data size (including null), plus marker
@@ -171,7 +183,7 @@ void test_event_queue_fuzz_event_data_length() {
     uint8_t rand_buffer[BUFFER_SIZE];
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
-    event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 4, .use_atomics = true };
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     EventQueueInit(&eq, &eq_config);
 
     const uint32_t test_cycles = 100000;
@@ -205,6 +217,38 @@ void test_event_queue_fuzz_event_data_length() {
     }
 }
 
+
+static uint32_t test_lock_count = 0;
+static uint32_t test_unlock_count = 0;
+
+static void test_lock() {
+    test_lock_count++;
+}
+
+static void test_unlock() {
+    test_unlock_count++;
+}
+
+/**
+ * Test option write lock function
+*/
+void test_lock_unlock() {
+    uint8_t buffer[BUFFER_SIZE];
+    event_queue_t eq;
+    event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
+    eq_config.lock = test_lock;
+    eq_config.unlock = test_unlock;
+    EventQueueInit(&eq, &eq_config);
+
+    test_lock_count = 0;
+    test_unlock_count = 0;
+
+    round_trip_test(&eq);
+
+    assert(test_lock_count == 1);
+    assert(test_unlock_count == 1);
+}
+
 /**
  * Main
 */
@@ -216,5 +260,6 @@ int main(int argc, char* argv[]) {
     test_event_queue_full();
     test_event_queue_empty();
     test_event_queue_fuzz_event_data_length();
+    test_lock_unlock();
     return 0;
 }

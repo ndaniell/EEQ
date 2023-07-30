@@ -41,12 +41,16 @@ extern "C"
         void* event_data;
     } event_t;
 
+    typedef void (*lock_unlock_func_t)();
+
     typedef struct
     {
         void* buffer;
         uint32_t buffer_len;
         bool use_atomics;
         uint32_t alignment;
+        lock_unlock_func_t lock;
+        lock_unlock_func_t unlock;
     } event_queue_config_t;
 
     typedef struct

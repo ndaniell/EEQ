@@ -43,6 +43,12 @@ void EventQueueClear(event_queue_t* const eq)
 }
 
 bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const event_data, const uint32_t event_data_len) {
+    // If locking function present, lock
+    if (eq->config.lock) {
+        eq->config.lock();
+    }
+
+    // Get head point and amount of available free space
     uint32_t avail_space;
     void* ptr = CircularBufferHead(&eq->_cb, &avail_space);
 
@@ -86,7 +92,14 @@ bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const
         ptr += event_data_len;
         memset(ptr, PADDING, padding);
     }
+
     CircularBufferProduce(&eq->_cb, q_item_size);
+
+    // If unlock function present, unlock
+    if (eq->config.unlock) {
+        eq->config.unlock();
+    }
+
     return true;
 }
 

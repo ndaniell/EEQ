@@ -1,9 +1,7 @@
 # EEQ
 Embedded Event Queue
 
-This library provides a C implementation of a Event Queue. An Event is a message style structure, an identifier followed by accompanying data. 
-To minimize the memory footprint it utilizes a circular buffer backend. The library utilizes padding to ensure contiguous memory for events and alignment.
-Memory is provided during initialization. Utilizes atomics to achieve a thread safe solution using single producer single consumer. 
+This library provides a C implementation of a Event Queue. An Event is a message style structure, represented by an identifier followed by accompanying data. The size of the event data can be dynamic. To minimize the memory footprint the library utilizes a circular buffer backend. The library ensure contiguous memory for events and allows the user to specify memory alignment for events. This is done using padding within the circular buffer which is consumed during a get. Memory is provided during initialization. The library leverages atomics to achieve a thread safe solution using single producer single consumer, but can be disabled. If multiple producers is desired a lock and unlock function can be provided via configuration to provide a write lock during a put.
 
 ## Initialize
 ```c
@@ -12,7 +10,9 @@ event_queue_t eq;
 event_queue_config_t eq_config = { .buffer = buffer, 
                                    .buffer_len = BUFFER_SIZE, 
                                    .alignment = 4, 
-                                   .use_atomics = true };
+                                   .use_atomics = true
+                                   .lock = NULL,
+                                   .unlock = NULL };
 EventQueueInit(&eq, &eq_config);
 ```
 
