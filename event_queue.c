@@ -42,7 +42,7 @@ void EventQueueClear(event_queue_t* const eq)
     CircularBufferClear(&eq->_cb);
 }
 
-bool EventQueuePut(event_queue_t* eq, const uint32_t event_id, void* const event_data, const uint32_t event_data_len) {
+bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const event_data, const uint32_t event_data_len) {
     uint32_t avail_space;
     void* ptr = CircularBufferHead(&eq->_cb, &avail_space);
 
@@ -95,23 +95,24 @@ event_t* EventQueueGet(event_queue_t* const eq)
     uint32_t available_bytes;
     void* tail = CircularBufferTail(&eq->_cb, &available_bytes);
 
+    // Consume padding if present
+    while (available_bytes > 0 && *(uint8_t*)tail == PADDING) {
+        CircularBufferConsume(&eq->_cb, sizeof(PADDING));
+        tail = CircularBufferTail(&eq->_cb, &available_bytes);
+    }
+
     // No data
     if (available_bytes <= 0) {
         return NULL;
     }
 
-    // Consume padding if present
-    while (available_bytes > 0 && *(uint8_t*)tail == PADDING) {
-        CircularBufferConsume(&eq->_cb, 1);
-        tail = CircularBufferTail(&eq->_cb, &available_bytes);
-    }
+    // If there are bytes, it should be at least the size of an base event
+    assert(available_bytes >= sizeof(event_t) + sizeof(EVENT_MARKER));
 
-    // Check if enough available to be an event
-    if (available_bytes < sizeof(event_t) + sizeof(EVENT_MARKER)) {
-        return NULL;
-    }
+    // Provide pointer past the event marker
+    tail += sizeof(EVENT_MARKER);
 
-    return (event_t*)++tail;
+    return (event_t*)tail;
 }
 
 void EventQueuePop(event_queue_t* const eq)

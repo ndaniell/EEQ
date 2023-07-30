@@ -54,35 +54,35 @@ extern "C"
         bool atomic;                       // Enable or disable atomic operators
     } circular_buffer_t;
 
-    static inline void* CircularBufferTail(circular_buffer_t* cbuffer, uint32_t* available_bytes);
+    static inline void* CircularBufferTail(circular_buffer_t* cb, uint32_t* available_bytes);
 
     /**
      * Initialize the Circular Buffer
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      * @param buffer Block of memory to be used for the circular buffer
      * @param length Size of the memory block
      * @param length use atomic operations
      */
-    static inline bool CircularBufferInit(circular_buffer_t* cbuffer, void* buffer, uint32_t length, bool use_atomics)
+    static inline bool CircularBufferInit(circular_buffer_t* const cb, void* const buffer, const uint32_t length, const bool use_atomics)
     {
-        cbuffer->buffer = buffer;
-        cbuffer->length = length;
-        cbuffer->fill_count = 0;
-        cbuffer->head = cbuffer->tail = 0;
-        cbuffer->atomic = use_atomics;
+        cb->buffer = buffer;
+        cb->length = length;
+        cb->fill_count = 0;
+        cb->head = cb->tail = 0;
+        cb->atomic = use_atomics;
         return true;
     }
 
     /**
      * Enables atomic functions when producing or consuming
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      * @param atomic Use atomic operations
      */
-    static inline void CircularBufferSetAtomic(circular_buffer_t* cbuffer, bool atomic)
+    static inline void CircularBufferSetAtomic(circular_buffer_t* const cb, const bool atomic)
     {
-        cbuffer->atomic = atomic;
+        cb->atomic = atomic;
     }
 
     /**
@@ -91,16 +91,16 @@ extern "C"
      *  This gives you a pointer to the end of the buffer, ready
      *  for reading, and the number of available bytes to read.
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      * @param available_bytes On output, the number of bytes ready for reading
      * @return Pointer to the first bytes ready for reading, or NULL if buffer is empty
      */
-    static inline void* CircularBufferTail(circular_buffer_t* cbuffer, uint32_t* available_bytes)
+    static inline void* CircularBufferTail(circular_buffer_t* const cb, uint32_t* available_bytes)
     {
-        *available_bytes = cbuffer->fill_count;
+        *available_bytes = cb->fill_count;
         if (*available_bytes == 0)
             return NULL;
-        return (void*)((char*)cbuffer->buffer + cbuffer->tail);
+        return (void*)((char*)cb->buffer + cb->tail);
     }
 
     /**
@@ -108,21 +108,21 @@ extern "C"
      *
      *  This frees up the just-read bytes, ready for writing again.
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      * @param amount Number of bytes to consume
      */
-    static inline void CircularBufferConsume(circular_buffer_t* cbuffer, uint32_t amount)
+    static inline void CircularBufferConsume(circular_buffer_t* const cb, const uint32_t amount)
     {
-        cbuffer->tail = (cbuffer->tail + amount) % cbuffer->length;
-        if (cbuffer->atomic)
+        cb->tail = (cb->tail + amount) % cb->length;
+        if (cb->atomic)
         {
-            atomicFetchAdd(&cbuffer->fill_count, -(int)amount);
+            atomicFetchAdd(&cb->fill_count, -(int)amount);
         }
         else
         {
-            cbuffer->fill_count -= amount;
+            cb->fill_count -= amount;
         }
-        assert(cbuffer->fill_count >= 0);
+        assert(cb->fill_count >= 0);
     }
 
     /**
@@ -131,29 +131,29 @@ extern "C"
      *  This gives you a pointer to the front of the buffer, ready
      *  for writing, and the number of available bytes to write.
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      * @param available_bytes On output, the number of bytes ready for writing
      * @return Pointer to the first bytes ready for writing, or NULL if buffer is full
      */
-    static inline void* CircularBufferHead(circular_buffer_t* cbuffer, uint32_t* available_bytes)
+    static inline void* CircularBufferHead(circular_buffer_t* const cb, uint32_t* available_bytes)
     {
-        *available_bytes = (cbuffer->length - cbuffer->fill_count);
+        *available_bytes = (cb->length - cb->fill_count);
         if (*available_bytes == 0)
             return NULL;
-        return (void*)((char*)cbuffer->buffer + cbuffer->head);
+        return (void*)((char*)cb->buffer + cb->head);
     }
 
     /**
      * Empties the circular buffer
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      */
-    static inline void CircularBufferClear(circular_buffer_t* cbuffer)
+    static inline void CircularBufferClear(circular_buffer_t* const cb)
     {
         uint32_t fill_count;
-        if (CircularBufferTail(cbuffer, &fill_count))
+        if (CircularBufferTail(cb, &fill_count))
         {
-            CircularBufferConsume(cbuffer, fill_count);
+            CircularBufferConsume(cb, fill_count);
         }
     }
 
@@ -162,18 +162,18 @@ extern "C"
      *
      *  This marks the given section of the buffer ready for reading.
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      * @param amount Number of bytes to produce
      */
-    static inline void CircularBufferProduce(circular_buffer_t* cbuffer, uint32_t amount) {
-        cbuffer->head = (cbuffer->head + amount) % cbuffer->length;
-        if (cbuffer->atomic) {
-            atomicFetchAdd(&cbuffer->fill_count, (int)amount);
+    static inline void CircularBufferProduce(circular_buffer_t* const cb, uint32_t amount) {
+        cb->head = (cb->head + amount) % cb->length;
+        if (cb->atomic) {
+            atomicFetchAdd(&cb->fill_count, (int)amount);
         }
         else {
-            cbuffer->fill_count += amount;
+            cb->fill_count += amount;
         }
-        assert(cbuffer->fill_count <= cbuffer->length);
+        assert(cb->fill_count <= cb->length);
     }
 
     /**
@@ -181,35 +181,41 @@ extern "C"
      *
      *  This copies the given bytes to the buffer, and marks them ready for reading.
      *
-     * @param cbuffer Circular buffer
+     * @param cb Circular buffer
      * @param src Source buffer
      * @param len Number of bytes in source buffer
      * @return true if bytes copied, false if there was insufficient space
      */
-    static inline bool CircularBufferProduceBytes(circular_buffer_t* cbuffer, const void* src, uint32_t len) {
+    static inline bool CircularBufferProduceBytes(circular_buffer_t* const cb, void* const src, const uint32_t len) {
         uint32_t space;
-        void* ptr = CircularBufferHead(cbuffer, &space);
+        void* ptr = CircularBufferHead(cb, &space);
 
         // No space
         if (space < len)
             return false;
 
         // No contiguous space to end, pad
-        if (cbuffer->head + len > cbuffer->length) {
-            uint32_t pad_count = cbuffer->length - cbuffer->head;
+        if (cb->head + len > cb->length) {
+            uint32_t pad_count = cb->length - cb->head;
             memset(ptr, 0, pad_count);
-            CircularBufferProduce(cbuffer, pad_count);
-            ptr = CircularBufferHead(cbuffer, &space);
+            CircularBufferProduce(cb, pad_count);
+            ptr = CircularBufferHead(cb, &space);
         }
 
         memcpy(ptr, src, len);
-        CircularBufferProduce(cbuffer, len);
+        CircularBufferProduce(cb, len);
 
         return true;
     }
 
-    static inline uint32_t CircularBufferContiguousFreeSpace(circular_buffer_t* cbuffer) {
-        return cbuffer->length - cbuffer->head;
+    /**
+     * Writing (producing) - Get the amount of free contiguous space after the head pointer
+     *
+     * @param cb Circular buffer
+     * @return number of contiguous bytes from the head
+    */
+    static inline uint32_t CircularBufferContiguousFreeSpace(circular_buffer_t* const cb) {
+        return cb->length - cb->head;
     }
 
 #ifdef __cplusplus

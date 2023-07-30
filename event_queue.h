@@ -78,7 +78,7 @@ extern "C"
      * @param event_data Data to accompany event
      * @param event_data_len Size of event data
     */
-    bool EventQueuePut(event_queue_t* eq, const uint32_t event_id, void* const event_data, const uint32_t event_data_len);
+    bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const event_data, const uint32_t event_data_len);
 
     /**
      * Get an event off the event queue
