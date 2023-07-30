@@ -1,5 +1,5 @@
 # EEQ
-[![ci](https://github.com/ndaniell/EEQ/actions/workflows/ci.yml/badge.svg)](https://github.com/ndaniell/EEQ/actions/workflows/ci.yml)
+[![ci](https://github.com/ndaniell/EEQ/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ndaniell/EEQ/actions/workflows/ci.yml)
 
 Embedded Event Queue
 
