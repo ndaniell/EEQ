@@ -9,7 +9,10 @@ Memory is provided during initialization. Utilizes atomics to achieve a thread s
 ```c
 uint8_t buffer[BUFFER_SIZE];
 event_queue_t eq;
-event_queue_config_t eq_config = { .buffer = buffer, .buffer_len = BUFFER_SIZE, .alignment = 4, .use_atomics = true };
+event_queue_config_t eq_config = { .buffer = buffer, 
+                                   .buffer_len = BUFFER_SIZE, 
+                                   .alignment = 4, 
+                                   .use_atomics = true };
 EventQueueInit(&eq, &eq_config);
 ```
 
