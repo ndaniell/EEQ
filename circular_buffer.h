@@ -46,12 +46,12 @@ extern "C"
 
     typedef struct
     {
-        void* buffer;
-        uint32_t length;
-        uint32_t tail;
-        uint32_t head;
-        volatile atomic_int_t fill_count;
-        bool atomic;
+        void* buffer;                      // Pointer to memory
+        uint32_t length;                   // Size of memory
+        uint32_t tail;                     // tail index
+        uint32_t head;                     // head index
+        volatile atomic_int_t fill_count;  // number of used indexes
+        bool atomic;                       // Enable or disable atomic operators
     } circular_buffer_t;
 
     static inline void* CircularBufferTail(circular_buffer_t* cbuffer, uint32_t* available_bytes);
@@ -60,16 +60,17 @@ extern "C"
      * Initialize the Circular Buffer
      *
      * @param cbuffer Circular buffer
-     * @param buffer Block of memory to be used for the ciruclar buffer
+     * @param buffer Block of memory to be used for the circular buffer
      * @param length Size of the memory block
+     * @param length use atomic operations
      */
-    static inline bool CircularBufferInit(circular_buffer_t* cbuffer, void* buffer, uint32_t length)
+    static inline bool CircularBufferInit(circular_buffer_t* cbuffer, void* buffer, uint32_t length, bool use_atomics)
     {
         cbuffer->buffer = buffer;
         cbuffer->length = length;
         cbuffer->fill_count = 0;
         cbuffer->head = cbuffer->tail = 0;
-        cbuffer->atomic = true;
+        cbuffer->atomic = use_atomics;
         return true;
     }
 
@@ -164,15 +165,12 @@ extern "C"
      * @param cbuffer Circular buffer
      * @param amount Number of bytes to produce
      */
-    static inline void CircularBufferProduce(circular_buffer_t* cbuffer, uint32_t amount)
-    {
+    static inline void CircularBufferProduce(circular_buffer_t* cbuffer, uint32_t amount) {
         cbuffer->head = (cbuffer->head + amount) % cbuffer->length;
-        if (cbuffer->atomic)
-        {
+        if (cbuffer->atomic) {
             atomicFetchAdd(&cbuffer->fill_count, (int)amount);
         }
-        else
-        {
+        else {
             cbuffer->fill_count += amount;
         }
         assert(cbuffer->fill_count <= cbuffer->length);
@@ -188,15 +186,30 @@ extern "C"
      * @param len Number of bytes in source buffer
      * @return true if bytes copied, false if there was insufficient space
      */
-    static inline bool CircularBufferProduceBytes(circular_buffer_t* cbuffer, const void* src, uint32_t len)
-    {
+    static inline bool CircularBufferProduceBytes(circular_buffer_t* cbuffer, const void* src, uint32_t len) {
         uint32_t space;
         void* ptr = CircularBufferHead(cbuffer, &space);
+
+        // No space
         if (space < len)
             return false;
+
+        // No contiguous space to end, pad
+        if (cbuffer->head + len > cbuffer->length) {
+            uint32_t pad_count = cbuffer->length - cbuffer->head;
+            memset(ptr, 0, pad_count);
+            CircularBufferProduce(cbuffer, pad_count);
+            ptr = CircularBufferHead(cbuffer, &space);
+        }
+
         memcpy(ptr, src, len);
         CircularBufferProduce(cbuffer, len);
+
         return true;
+    }
+
+    static inline uint32_t CircularBufferContiguousFreeSpace(circular_buffer_t* cbuffer) {
+        return cbuffer->length - cbuffer->head;
     }
 
 #ifdef __cplusplus

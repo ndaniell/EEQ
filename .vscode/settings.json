@@ -75,6 +75,9 @@
         "xstring": "c",
         "xtr1common": "c",
         "xtree": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "time.h": "c",
+        "string.h": "c",
+        "stdio.h": "c"
     }
 }

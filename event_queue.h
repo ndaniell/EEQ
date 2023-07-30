@@ -43,6 +43,15 @@ extern "C"
 
     typedef struct
     {
+        void* buffer;
+        uint32_t buffer_len;
+        bool use_atomics;
+        uint32_t alignment;
+    } event_queue_config_t;
+
+    typedef struct
+    {
+        event_queue_config_t config;
         circular_buffer_t _cb;
     } event_queue_t;
 
@@ -50,39 +59,26 @@ extern "C"
      * Initialize the event queue
      *
      * @param eq Event Queue
-     * @param buffer Memory block to utilize
-     * @param buffer_size Size of memory block
+     * @param config Event Queue Configuration
     */
-    static inline bool EventQueueInit(event_queue_t* eq, void* buffer, uint32_t buffer_size)
-    {
-        CircularBufferInit(&eq->_cb, buffer, buffer_size);
-        return true;
-    }
+    bool EventQueueInit(event_queue_t* const eq, event_queue_config_t* const config);
 
     /**
      * Clear the event queue
      *
      * @param eq Event Queue
     */
-    static inline void EventQueueClear(event_queue_t* eq)
-    {
-        CircularBufferClear(&eq->_cb);
-    }
+    void EventQueueClear(event_queue_t* const eq);
 
     /**
      * Put an event off the event queue
      *
      * @param eq Event Queue
-     * @param event Poiner to the event to place in the queue (done by copy)
+     * @param event_id Event identifier
+     * @param event_data Data to accompany event
+     * @param event_data_len Size of event data
     */
-    static inline bool EventQueuePut(event_queue_t* eq, event_t* event)
-    {
-        uint32_t event_size = sizeof(event_t);
-        if (event->event_data != NULL && event->event_data_length > 0) {
-            event_size += event->event_data_length;
-        }
-        return CircularBufferProduceBytes(&eq->_cb, (void*)event, event_size);
-    }
+    bool EventQueuePut(event_queue_t* eq, const uint32_t event_id, void* const event_data, const uint32_t event_data_len);
 
     /**
      * Get an event off the event queue
@@ -90,28 +86,14 @@ extern "C"
      * @param eq Event Queue
      * @return Pointer to the event - NULL if no event
     */
-    static inline event_t* EventQueueGet(event_queue_t* eq)
-    {
-        uint32_t available_bytes;
-        event_t* evt = (event_t*)CircularBufferTail(&eq->_cb, &available_bytes);
-        if (available_bytes < sizeof(event_t)) {
-            evt = NULL;
-        }
-        return evt;
-    }
+    event_t* EventQueueGet(event_queue_t* const eq);
 
     /**
      * Remove an event from the event queue
      *
      * @param eq Event Queue
     */
-    static inline void EventQueuePop(event_queue_t* eq)
-    {
-        event_t* evt = EventQueueGet(eq);
-        if (evt != NULL) {
-            CircularBufferConsume(&eq->_cb, sizeof(event_t) + evt->event_data_length);
-        }
-    }
+    void EventQueuePop(event_queue_t* const eq);
 
 #ifdef __cplusplus
 }
