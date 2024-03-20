@@ -1,9 +1,7 @@
-# EEQ
+# Embedded Event Queue (EEQ)
 [![ci](https://github.com/ndaniell/EEQ/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ndaniell/EEQ/actions/workflows/ci.yml)
 
-Embedded Event Queue
-
-This library provides a C implementation of a Event Queue. An Event is a message style structure, represented by an identifier followed by accompanying data. The size of the event data can be dynamic. To avoid memory fragmentation associated with heap allocation and to minimize the memory footprint the library utilizes a circular buffer backend. The library ensure contiguous memory for events and allows the user to specify memory alignment for events. This is done using padding within the circular buffer which is consumed during a get. Memory is provided during initialization. The library leverages atomics to achieve a thread safe solution using single producer single consumer, but can be disabled. If multiple producers is desired a lock and unlock function can be provided via configuration to provide a write lock during a put.
+This library offers a C implementation for an Event Queue, where an Event is defined as a message-style structure comprising an identifier and associated data. The size of this event data can vary dynamically. To reduce memory fragmentation from heap allocation and minimize the memory footprint, the library employs a circular buffer backend. It ensures contiguous memory allocation for events and permits user-specified memory alignment through padding within the circular buffer, utilized during retrieval. Memory allocation occurs during initialization. For thread safety, the library utilizes atomics to support a single producer-single consumer model, which can be optionally disabled. For scenarios requiring multiple producers, the library can be configured to include lock and unlock functions, ensuring a write lock during data insertion.
 
 ## Initialize
 ```c
