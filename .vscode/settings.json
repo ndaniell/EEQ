@@ -78,6 +78,9 @@
         "xutility": "c",
         "time.h": "c",
         "string.h": "c",
-        "stdio.h": "c"
-    }
+        "stdio.h": "c",
+        "event_queue.h": "c",
+        "circular_buffer.h": "c"
+    },
+    "cmake.options.statusBarVisibility": "visible"
 }

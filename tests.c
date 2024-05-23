@@ -198,8 +198,8 @@ void test_event_queue_fuzz_event_data_length() {
             bool placed = false;
             do {
                 uint32_t event_data_size = rand() % (BUFFER_SIZE / 4);
-                for (uint32_t i = 0; i < event_data_size; i++) {
-                    rand_buffer[i] = (uint8_t)rand();
+                for (uint32_t j = 0; j < event_data_size; j++) {
+                    rand_buffer[j] = (uint8_t)rand();
                 }
                 placed = EventQueuePut(&eq, put_count, rand_buffer, event_data_size);
                 if (placed) {

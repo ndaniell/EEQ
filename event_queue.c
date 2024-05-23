@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include "event_queue.h"
 
-#define EVENT_MARKER (uint8_t)0xFF
+#define EVENT_MARKER (uint32_t)0xFFFFFFFF
 #define PADDING (uint8_t)0x00
 
 bool EventQueueInit(event_queue_t* const eq, event_queue_config_t* const config)
@@ -71,7 +71,7 @@ bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const
         }
         else {
             // There is enough space, but not enough contiguous space.
-            // Add padding to wrap the head to the start of the buffer 
+            // Add padding to wrap the head to the start of the buffer
             // to create more contiguous space.
             memset(ptr, PADDING, avail_contig_space);
             CircularBufferProduce(&eq->_cb, avail_contig_space);
@@ -80,8 +80,8 @@ bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const
     }
 
     // Place start of event marker and event and produce it ready for reading
-    *(uint8_t*)ptr = EVENT_MARKER;
-    ptr++;
+    *(uint32_t*)ptr = EVENT_MARKER;
+    ptr += sizeof(EVENT_MARKER);
     event_t* event_ptr = (event_t*)ptr;
     ptr += sizeof(event_t);
     event_ptr->event_id = event_id;
@@ -115,7 +115,7 @@ event_t* EventQueueGet(event_queue_t* const eq)
     }
 
     // No data
-    if (available_bytes <= 0) {
+    if (available_bytes == 0) {
         return NULL;
     }
 

@@ -27,12 +27,9 @@
 #include <assert.h>
 
 #ifdef __cplusplus
-extern "C++"
-{
 #include <atomic>
-    typedef std::atomic_int atomic_int_t;
+typedef std::atomic_int atomic_int_t;
 #define atomicFetchAdd(a, b) std::atomic_fetch_add(a, b)
-}
 #else
 #include <stdatomic.h>
 typedef atomic_int atomic_int_t;
@@ -123,7 +120,7 @@ extern "C"
             cb->fill_count -= amount;
         }
         assert(cb->fill_count >= 0);
-        if (cb->fill_count > cb->high_water_fill_count) {
+        if (cb->fill_count > (int)cb->high_water_fill_count) {
             cb->high_water_fill_count = cb->fill_count;
         }
     }
@@ -176,7 +173,7 @@ extern "C"
         else {
             cb->fill_count += amount;
         }
-        assert(cb->fill_count <= cb->length);
+        assert(cb->fill_count <= (int)cb->length);
     }
 
     /**
