@@ -22,9 +22,6 @@
 #include <stdlib.h>
 #include "event_queue.h"
 
-#define EVENT_MARKER (uint32_t)0xFFFFFFFF
-#define PADDING (uint8_t)0x00
-
 bool EventQueueInit(event_queue_t* const eq, event_queue_config_t* const config)
 {
     if (config->buffer == NULL)

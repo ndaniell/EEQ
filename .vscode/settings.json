@@ -82,5 +82,6 @@
         "event_queue.h": "c",
         "circular_buffer.h": "c"
     },
-    "cmake.options.statusBarVisibility": "visible"
+    "cmake.options.statusBarVisibility": "visible",
+    "cmake.configureOnOpen": true
 }

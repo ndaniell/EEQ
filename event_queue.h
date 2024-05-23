@@ -29,6 +29,9 @@
 
 #include "circular_buffer.h"
 
+#define EVENT_MARKER (uint32_t)0xFFFFFFFF
+#define PADDING (uint8_t)0x00
+
 #ifdef __cplusplus
 extern "C"
 {

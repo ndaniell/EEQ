@@ -104,7 +104,7 @@ void test_event_queue_full() {
     char* event_data = "Hello World";
     const uint32_t event_data_len = strlen(event_data) + 1;
     // Size of event, plus data size (including null), plus marker
-    uint32_t q_item_size = sizeof(event_t) + event_data_len + 1;
+    uint32_t q_item_size = sizeof(event_t) + event_data_len + sizeof(EVENT_MARKER);
     uint32_t event_queue_count = BUFFER_SIZE / q_item_size;
 
     // Fill the queue
