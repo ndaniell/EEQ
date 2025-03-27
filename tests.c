@@ -41,17 +41,17 @@ static void round_trip_test(event_queue_t* eq) {
     uint32_t event_id = 1;
     char* event_data = "Hello World";
     const uint32_t event_data_len = strlen(event_data) + 1;
-    assert(EventQueuePut(eq, 1, event_data, event_data_len) == true);
+    assert(event_queue_put(eq, 1, event_data, event_data_len) == true);
 
-    event_t* out_event = EventQueueGet(eq);
+    event_t* out_event = event_queue_get(eq);
     assert(out_event != NULL);
 
     assert(out_event->event_id == event_id);
     assert(out_event->event_data_length == event_data_len);
     assert(memcmp(out_event->event_data, event_data, out_event->event_data_length) == 0);
 
-    EventQueuePop(eq);
-    assert(EventQueueGet(eq) == NULL);
+    event_queue_pop(eq);
+    assert(event_queue_get(eq) == NULL);
 }
 
 /**
@@ -61,7 +61,7 @@ void test_happy_trails() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
     round_trip_test(&eq);
 }
@@ -74,7 +74,7 @@ void test_zero_alignment() {
     event_queue_t eq;
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     eq_config.alignment = 0;
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
     round_trip_test(&eq);
 }
@@ -87,7 +87,7 @@ void test_no_atomics() {
     event_queue_t eq;
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     eq_config.use_atomics = false;
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
     round_trip_test(&eq);
 }
@@ -99,7 +99,7 @@ void test_event_queue_full() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
     char* event_data = "Hello World";
     const uint32_t event_data_len = strlen(event_data) + 1;
@@ -109,18 +109,18 @@ void test_event_queue_full() {
 
     // Fill the queue
     for (uint32_t i = 0; i < event_queue_count; i++) {
-        assert(EventQueuePut(&eq, 1, event_data, event_data_len) == true);
+        assert(event_queue_put(&eq, 1, event_data, event_data_len) == true);
     }
 
     // Should be full
-    assert(EventQueuePut(&eq, 1, event_data, event_data_len) == false);
+    assert(event_queue_put(&eq, 1, event_data, event_data_len) == false);
 
     // Pop twice to guarantee space
-    EventQueuePop(&eq);
-    EventQueuePop(&eq);
+    event_queue_pop(&eq);
+    event_queue_pop(&eq);
 
     // Should have space for a new event
-    assert(EventQueuePut(&eq, 1, event_data, event_data_len) == true);
+    assert(event_queue_put(&eq, 1, event_data, event_data_len) == true);
 }
 
 
@@ -131,9 +131,9 @@ void test_event_queue_empty() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
-    assert(EventQueueGet(&eq) == NULL);
+    assert(event_queue_get(&eq) == NULL);
 }
 
 /**
@@ -143,7 +143,7 @@ void test_event_queue_fill_and_empty() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
     // Size of event, plus data size (including null), plus marker
     uint32_t q_item_size = sizeof(event_t) + 1;
@@ -151,29 +151,29 @@ void test_event_queue_fill_and_empty() {
 
     // Fill the queue
     for (uint32_t i = 0; i < event_queue_count; i++) {
-        assert(EventQueuePut(&eq, i, NULL, 0) == true);
+        assert(event_queue_put(&eq, i, NULL, 0) == true);
     }
 
     // Should be full
-    assert(EventQueuePut(&eq, 1, NULL, 0) == false);
+    assert(event_queue_put(&eq, 1, NULL, 0) == false);
 
     // Empty the queue
     for (uint32_t i = 0; i < event_queue_count; i++) {
-        event_t* out_event = EventQueueGet(&eq);
+        event_t* out_event = event_queue_get(&eq);
         assert(out_event != NULL);
         assert(out_event->event_id == i);
         assert(out_event->event_data_length == 0);
         assert(out_event->event_data == NULL);
-        EventQueuePop(&eq);
+        event_queue_pop(&eq);
     }
 
     // Fill the queue back up
     for (uint32_t i = 0; i < event_queue_count; i++) {
-        assert(EventQueuePut(&eq, i, NULL, 0) == true);
+        assert(event_queue_put(&eq, i, NULL, 0) == true);
     }
 
     // Should be full
-    assert(EventQueuePut(&eq, 1, NULL, 0) == false);
+    assert(event_queue_put(&eq, 1, NULL, 0) == false);
 }
 
 /**
@@ -184,14 +184,14 @@ void test_event_queue_fuzz_event_data_length() {
     uint8_t buffer[BUFFER_SIZE];
     event_queue_t eq;
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
     const uint32_t test_cycles = 1000;
     uint32_t put_count = 0;
     uint32_t get_count = 0;
     const uint32_t max_high_water = BUFFER_SIZE - (BUFFER_SIZE % (sizeof(event_t) + 1));  // +1 for marker
     for (uint32_t i = 0; i < test_cycles; i++) {
-        EventQueueInit(&eq, &eq_config);
+        event_queue_init(&eq, &eq_config);
         // Run event size combinations until the high water fill mark hit max
         while (eq._cb.high_water_fill_count <= max_high_water) {
             // Fill the queue with random sized events with random data
@@ -201,7 +201,7 @@ void test_event_queue_fuzz_event_data_length() {
                 for (uint32_t j = 0; j < event_data_size; j++) {
                     rand_buffer[j] = (uint8_t)rand();
                 }
-                placed = EventQueuePut(&eq, put_count, rand_buffer, event_data_size);
+                placed = event_queue_put(&eq, put_count, rand_buffer, event_data_size);
                 if (placed) {
                     put_count++;
                 }
@@ -210,11 +210,11 @@ void test_event_queue_fuzz_event_data_length() {
             // Empty the queue
             event_t* out_event = NULL;
             do {
-                out_event = EventQueueGet(&eq);
+                out_event = event_queue_get(&eq);
                 if (out_event) {
                     assert(out_event->event_id == get_count);
                     get_count++;
-                    EventQueuePop(&eq);
+                    event_queue_pop(&eq);
                 }
             } while (out_event);
         }
@@ -242,7 +242,7 @@ void test_lock_unlock() {
     event_queue_config_t eq_config = default_config(buffer, BUFFER_SIZE);
     eq_config.lock = test_lock;
     eq_config.unlock = test_unlock;
-    EventQueueInit(&eq, &eq_config);
+    event_queue_init(&eq, &eq_config);
 
     test_lock_count = 0;
     test_unlock_count = 0;
