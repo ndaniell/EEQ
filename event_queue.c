@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Nicholas Daniell
+ * Copyright (c) 2025 Nicholas Daniell
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ void EventQueueClear(event_queue_t* const eq)
     CircularBufferClear(&eq->_cb);
 }
 
-bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const event_data, const uint32_t event_data_len) {
+bool EventQueuePut(event_queue_t* const eq, const event_id_t event_id, void* const event_data, const uint32_t event_data_len) {
     // If locking function present, lock
     if (eq->config.lock) {
         eq->config.lock();
@@ -47,7 +47,7 @@ bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const
 
     // Get head point and amount of available free space
     uint32_t avail_space;
-    void* ptr = CircularBufferHead(&eq->_cb, &avail_space);
+    void* head_ptr = CircularBufferHead(&eq->_cb, &avail_space);
 
     uint32_t q_item_size = sizeof(event_t) + event_data_len + sizeof(EVENT_MARKER);
     const uint32_t padding = (eq->config.alignment > 0) ? (q_item_size % eq->config.alignment) : 0U;
@@ -70,24 +70,26 @@ bool EventQueuePut(event_queue_t* const eq, const uint32_t event_id, void* const
             // There is enough space, but not enough contiguous space.
             // Add padding to wrap the head to the start of the buffer
             // to create more contiguous space.
-            memset(ptr, PADDING, avail_contig_space);
+            memset(head_ptr, PADDING, avail_contig_space);
             CircularBufferProduce(&eq->_cb, avail_contig_space);
-            ptr = CircularBufferHead(&eq->_cb, &avail_space);
+            head_ptr = CircularBufferHead(&eq->_cb, &avail_space);
         }
     }
 
     // Place start of event marker and event and produce it ready for reading
-    *(uint32_t*)ptr = EVENT_MARKER;
-    ptr += sizeof(EVENT_MARKER);
-    event_t* event_ptr = (event_t*)ptr;
-    ptr += sizeof(event_t);
+    *(uint32_t*)head_ptr = EVENT_MARKER;
+    ((uint32_t*)head_ptr) += sizeof(EVENT_MARKER);
+
+    event_t* event_ptr = (event_t*)head_ptr;
+    ((uint32_t*)head_ptr) += sizeof(event_t);
+    
     event_ptr->event_id = event_id;
     event_ptr->event_data_length = event_data_len;
-    event_ptr->event_data = ptr;
-    memcpy(ptr, event_data, event_data_len);
+    event_ptr->event_data = head_ptr;
+    memcpy(head_ptr, event_data, event_data_len);
     if (padding) {
-        ptr += event_data_len;
-        memset(ptr, PADDING, padding);
+        ((uint32_t*)head_ptr) += event_data_len;
+        memset(head_ptr, PADDING, padding);
     }
 
     CircularBufferProduce(&eq->_cb, q_item_size);
@@ -120,7 +122,7 @@ event_t* EventQueueGet(event_queue_t* const eq)
     assert(available_bytes >= sizeof(event_t) + sizeof(EVENT_MARKER));
 
     // Provide pointer past the event marker
-    tail += sizeof(EVENT_MARKER);
+    ((uint32_t*)tail) += sizeof(EVENT_MARKER);
 
     return (event_t*)tail;
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Nicholas Daniell
+ * Copyright (c) 2025 Nicholas Daniell
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,11 @@
 typedef std::atomic_int atomic_int_t;
 #define atomicFetchAdd(a, b) std::atomic_fetch_add(a, b)
 #else
+#if defined(_MSC_VER)
+#include "win32_stdatomic.h"
+#else
 #include <stdatomic.h>
+#endif
 typedef atomic_int atomic_int_t;
 #define atomicFetchAdd(a, b) atomic_fetch_add(a, b)
 #endif  // __cplusplus
