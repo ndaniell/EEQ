@@ -8,8 +8,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -22,46 +22,42 @@
 #ifndef EVENT_QUEUE_H
 #define EVENT_QUEUE_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "circular_buffer.h"
 
 #ifdef __cplusplus
-extern "C"
-{
-#endif  // __cplusplus
+extern "C" {
+#endif // __cplusplus
 
 typedef uint32_t event_id_t;
 
 #define EVENT_MARKER (uint32_t)0xFFFFFFFF
 #define PADDING (uint8_t)0x00
 
-typedef struct
-{
-    event_id_t event_id;
-    uint32_t event_data_length;
-    void* event_data;
+typedef struct {
+  event_id_t event_id;
+  uint32_t event_data_length;
+  void *event_data;
 } event_t;
 
 typedef void (*lock_unlock_func_t)();
 
-typedef struct
-{
-    void* buffer;
-    uint32_t buffer_len;
-    bool use_atomics;
-    uint32_t alignment;
-    lock_unlock_func_t lock;
-    lock_unlock_func_t unlock;
+typedef struct {
+  void *buffer;
+  uint32_t buffer_len;
+  bool use_atomics;
+  uint32_t alignment;
+  lock_unlock_func_t lock;
+  lock_unlock_func_t unlock;
 } event_queue_config_t;
 
-typedef struct
-{
-    event_queue_config_t config;
-    circular_buffer_t _cb;
+typedef struct {
+  event_queue_config_t config;
+  circular_buffer_t _cb;
 } event_queue_t;
 
 /**
@@ -69,15 +65,16 @@ typedef struct
  *
  * @param eq Event Queue
  * @param config Event Queue Configuration
-*/
-bool EventQueueInit(event_queue_t* const eq, event_queue_config_t* const config);
+ */
+bool event_queue_init(event_queue_t *const eq,
+                    event_queue_config_t *const config);
 
 /**
  * Clear the event queue
  *
  * @param eq Event Queue
-*/
-void EventQueueClear(event_queue_t* const eq);
+ */
+void event_queue_clear(event_queue_t *const eq);
 
 /**
  * Put an event off the event queue
@@ -86,26 +83,27 @@ void EventQueueClear(event_queue_t* const eq);
  * @param event_id Event identifier
  * @param event_data Data to accompany event
  * @param event_data_len Size of event data
-*/
-bool EventQueuePut(event_queue_t* const eq, const event_id_t event_id, void* const event_data, const uint32_t event_data_len);
+ */
+bool event_queue_put(event_queue_t *const eq, const event_id_t event_id,
+                   void *const event_data, const uint32_t event_data_len);
 
 /**
  * Get an event off the event queue
  *
  * @param eq Event Queue
  * @return Pointer to the event - NULL if no event
-*/
-event_t* EventQueueGet(event_queue_t* const eq);
+ */
+event_t *event_queue_get(event_queue_t *const eq);
 
 /**
  * Remove an event from the event queue
  *
  * @param eq Event Queue
-*/
-void EventQueuePop(event_queue_t* const eq);
+ */
+void event_queue_pop(event_queue_t *const eq);
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 
-#endif  // EVENT_QUEUE_H
+#endif // EVENT_QUEUE_H
