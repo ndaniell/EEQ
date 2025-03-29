@@ -32,3 +32,13 @@ add_custom_target(lcov_coverage
     COMMAND genhtml ${CMAKE_BINARY_DIR}/lcov_coverage/filtered_coverage.info --output-directory ${CMAKE_BINARY_DIR}/lcov_coverage/html
     COMMENT "Generating lcov coverage reports"
 )
+
+# Add custom target for code formatting
+add_custom_target(format
+    COMMAND clang-format -i -style=llvm
+        ${CMAKE_SOURCE_DIR}/tests.c
+        ${CMAKE_SOURCE_DIR}/event_queue.c
+        ${CMAKE_SOURCE_DIR}/event_queue.h
+        ${CMAKE_SOURCE_DIR}/circular_buffer.h
+    COMMENT "Formatting source files with clang-format using LLVM style"
+)

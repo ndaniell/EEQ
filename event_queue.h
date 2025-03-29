@@ -67,7 +67,7 @@ typedef struct {
  * @param config Event Queue Configuration
  */
 bool event_queue_init(event_queue_t *const eq,
-                    event_queue_config_t *const config);
+                      event_queue_config_t *const config);
 
 /**
  * Clear the event queue
@@ -85,7 +85,7 @@ void event_queue_clear(event_queue_t *const eq);
  * @param event_data_len Size of event data
  */
 bool event_queue_put(event_queue_t *const eq, const event_id_t event_id,
-                   void *const event_data, const uint32_t event_data_len);
+                     void *const event_data, const uint32_t event_data_len);
 
 /**
  * Get an event off the event queue

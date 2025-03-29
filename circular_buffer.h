@@ -55,7 +55,7 @@ typedef struct {
 } circular_buffer_t;
 
 static inline void *circular_buffer_tail(circular_buffer_t *cb,
-                                       uint32_t *available_bytes);
+                                         uint32_t *available_bytes);
 
 /**
  * Initialize the Circular Buffer
@@ -66,8 +66,9 @@ static inline void *circular_buffer_tail(circular_buffer_t *cb,
  * @param length use atomic operations
  */
 static inline bool circular_buffer_init(circular_buffer_t *const cb,
-                                      void *const buffer, const uint32_t length,
-                                      const bool use_atomics) {
+                                        void *const buffer,
+                                        const uint32_t length,
+                                        const bool use_atomics) {
   cb->buffer = buffer;
   cb->length = length;
   cb->fill_count = 0;
@@ -84,7 +85,7 @@ static inline bool circular_buffer_init(circular_buffer_t *const cb,
  * @param atomic Use atomic operations
  */
 static inline void circular_buffer_set_atomic(circular_buffer_t *const cb,
-                                           const bool atomic) {
+                                              const bool atomic) {
   cb->atomic = atomic;
 }
 
@@ -100,7 +101,7 @@ static inline void circular_buffer_set_atomic(circular_buffer_t *const cb,
  * empty
  */
 static inline void *circular_buffer_tail(circular_buffer_t *const cb,
-                                       uint32_t *available_bytes) {
+                                         uint32_t *available_bytes) {
   *available_bytes = cb->fill_count;
   if (*available_bytes == 0)
     return NULL;
@@ -116,7 +117,7 @@ static inline void *circular_buffer_tail(circular_buffer_t *const cb,
  * @param amount Number of bytes to consume
  */
 static inline void circular_buffer_consume(circular_buffer_t *const cb,
-                                         const uint32_t amount) {
+                                           const uint32_t amount) {
   cb->tail = (cb->tail + amount) % cb->length;
   if (cb->atomic) {
     atomicFetchAdd(&cb->fill_count, -(int)amount);
@@ -141,7 +142,7 @@ static inline void circular_buffer_consume(circular_buffer_t *const cb,
  * full
  */
 static inline void *circular_buffer_head(circular_buffer_t *const cb,
-                                       uint32_t *available_bytes) {
+                                         uint32_t *available_bytes) {
   *available_bytes = (cb->length - cb->fill_count);
   if (*available_bytes == 0)
     return NULL;
@@ -169,7 +170,7 @@ static inline void circular_buffer_clear(circular_buffer_t *const cb) {
  * @param amount Number of bytes to produce
  */
 static inline void circular_buffer_produce(circular_buffer_t *const cb,
-                                         uint32_t amount) {
+                                           uint32_t amount) {
   cb->head = (cb->head + amount) % cb->length;
   if (cb->atomic) {
     atomicFetchAdd(&cb->fill_count, (int)amount);
@@ -190,8 +191,8 @@ static inline void circular_buffer_produce(circular_buffer_t *const cb,
  * @return true if bytes copied, false if there was insufficient space
  */
 static inline bool circular_buffer_produce_bytes(circular_buffer_t *const cb,
-                                              void *const src,
-                                              const uint32_t len) {
+                                                 void *const src,
+                                                 const uint32_t len) {
   uint32_t space;
   void *ptr = circular_buffer_head(cb, &space);
 
