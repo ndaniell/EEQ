@@ -10,10 +10,10 @@ event_queue_t eq;
 event_queue_config_t eq_config = { .buffer = buffer, 
                                    .buffer_len = BUFFER_SIZE, 
                                    .alignment = 4, 
-                                   .use_atomics = true
+                                   .use_atomics = true,
                                    .lock = NULL,
                                    .unlock = NULL };
-EventQueueInit(&eq, &eq_config);
+event_queue_init(&eq, &eq_config);
 ```
 
 ## Put
@@ -21,7 +21,7 @@ EventQueueInit(&eq, &eq_config);
 uint32_t event_id = 1;
 char* event_data = "Hello World";
 const uint32_t event_data_len = strlen(event_data) + 1;  // Plus 1 for NULL
-bool enqueued = EventQueuePut(&eq, event_id, event_data, event_data_len);
+bool enqueued = event_queue_put(&eq, event_id, event_data, event_data_len);
 if (!enqueued) {
     // Queue full
 }
@@ -29,10 +29,10 @@ if (!enqueued) {
 
 ## Get
 ```c
-event_t* out_event = EventQueueGet(&eq);
+event_t* out_event = event_queue_get(&eq);
 if (out_event != NULL) {
     // consume event
-    EventQueuePop(&eq);  // Remove event from event queue
+    event_queue_pop(&eq);  // Remove event from event queue
 }
 ```
 
