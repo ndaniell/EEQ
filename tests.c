@@ -325,6 +325,113 @@ void test_event_queue_clear() {
 }
 
 /**
+ * Test event queue initialization with invalid parameters
+ */
+void test_event_queue_init_invalid_params() {
+  event_queue_t eq;
+  event_queue_config_t eq_config = {
+    .buffer = NULL,
+    .buffer_len = 0,
+    .alignment = 4,
+    .use_atomics = false,
+    .lock = NULL,
+    .unlock = NULL
+  };
+
+  // Test with NULL buffer
+  assert(event_queue_init(&eq, &eq_config) == false);
+
+  // Test with zero buffer length
+  uint8_t buffer[BUFFER_SIZE];
+  eq_config.buffer = buffer;
+  eq_config.buffer_len = 0;
+  assert(event_queue_init(&eq, &eq_config) == false);
+}
+
+/**
+ * Test atomic vs non-atomic behavior
+ */
+void test_circular_buffer_atomic_operations() {
+    uint8_t buffer[BUFFER_SIZE];
+    circular_buffer_t cb;
+    
+    // First test with atomics disabled
+    circular_buffer_init(&cb, buffer, BUFFER_SIZE, false);
+    assert(cb.atomic == false);
+    
+    // Test produce/consume operations
+    const char *test_data = "Test Data";
+    const uint32_t data_len = strlen(test_data) + 1;
+    
+    // Produce data
+    assert(circular_buffer_produce_bytes(&cb, (void*)test_data, data_len));
+    
+    // Verify fill count is updated non-atomically
+    assert(cb.fill_count == data_len);
+    
+    // Now test with atomics enabled
+    circular_buffer_init(&cb, buffer, BUFFER_SIZE, true);
+    assert(cb.atomic == true);
+    
+    // Test produce/consume operations with atomics
+    assert(circular_buffer_produce_bytes(&cb, (void*)test_data, data_len));
+    
+    // Verify fill count is maintained as atomic
+    assert(atomic_load(&cb.fill_count) == data_len);
+    
+    // Test atomic consume
+    uint32_t available;
+    void *read_ptr = circular_buffer_tail(&cb, &available);
+    assert(read_ptr != NULL);
+    assert(available == data_len);
+    assert(memcmp(read_ptr, test_data, data_len) == 0);
+    
+    circular_buffer_consume(&cb, data_len);
+    assert(atomic_load(&cb.fill_count) == 0);
+    
+    // Test switching atomic mode at runtime
+    circular_buffer_set_atomic(&cb, false);
+    assert(cb.atomic == false);
+    
+    // Verify non-atomic operation after switching
+    assert(circular_buffer_produce_bytes(&cb, (void*)test_data, data_len));
+    assert(cb.fill_count == data_len);
+}
+
+/**
+ * Test circular buffer produce bytes functionality
+ */
+void test_circular_buffer_produce_bytes() {
+    // Test producing more bytes than buffer size
+    uint8_t buffer_small[10];
+    uint8_t buffer[BUFFER_SIZE];
+    uint8_t test_buffer[BUFFER_SIZE];
+    circular_buffer_t cb;
+    circular_buffer_init(&cb, buffer_small, 10, false);
+
+    const char *test_data = "0123456789";
+    const uint32_t data_len = strlen(test_data) + 1;
+    assert(circular_buffer_produce_bytes(&cb, (void*)test_data, data_len) == false);
+
+    // Test circular buffer produce of random sizes
+    circular_buffer_init(&cb, buffer, BUFFER_SIZE, false);
+    for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
+        if (circular_buffer_produce_bytes(&cb, (void*)test_buffer, i) == false) {
+            break;
+        }
+    }
+
+    // Test circular buffer produce of random sizes
+    circular_buffer_init(&cb, buffer, BUFFER_SIZE, false);
+    for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
+        uint32_t random_size = rand() % (BUFFER_SIZE - i);
+        if (circular_buffer_produce_bytes(&cb, (void*)test_buffer, random_size) == false) {
+            break;
+        }
+    }    
+}
+
+/**
  * Main
  */
 int main(int argc, char *argv[]) {
@@ -338,5 +445,8 @@ int main(int argc, char *argv[]) {
   test_lock_unlock();
   test_circular_buffer_clear();
   test_event_queue_clear();
+  test_event_queue_init_invalid_params();
+  test_circular_buffer_atomic_operations();
+  test_circular_buffer_produce_bytes();
   return 0;
 }

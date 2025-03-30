@@ -200,14 +200,6 @@ static inline bool circular_buffer_produce_bytes(circular_buffer_t *const cb,
   if (space < len)
     return false;
 
-  // No contiguous space to end, pad
-  if (cb->head + len > cb->length) {
-    uint32_t pad_count = cb->length - cb->head;
-    memset(ptr, 0, pad_count);
-    circular_buffer_produce(cb, pad_count);
-    ptr = circular_buffer_head(cb, &space);
-  }
-
   memcpy(ptr, src, len);
   circular_buffer_produce(cb, len);
 
