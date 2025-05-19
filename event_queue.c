@@ -53,7 +53,7 @@ bool event_queue_put(event_queue_t *const eq, const event_id_t event_id,
   uint32_t q_item_size =
       sizeof(event_t) + event_data_len + sizeof(EVENT_MARKER);
   const uint32_t padding =
-      (eq->config.alignment > 0) ? (q_item_size % eq->config.alignment) : 0U;
+      (eq->config.alignment > 0) ? (eq->config.alignment - (q_item_size % eq->config.alignment)) % eq->config.alignment : 0U;
   q_item_size += padding;
 
   // No space
